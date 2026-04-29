@@ -180,7 +180,6 @@ export default function LoginPage() {
                 <option value="member">Member</option>
                 <option value="viewer">Viewer</option>
               </select>
-              <p className="text-xs text-gray-500 mt-1">Prefix name with * to create admin (secret)</p>
             </div>
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
