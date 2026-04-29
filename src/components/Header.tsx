@@ -63,7 +63,13 @@ export default function Header({ onToggleSidebar, sidebarOpen }: { onToggleSideb
         <div className="relative">
           <button className="relative text-gray-400 hover:text-white" onClick={() => setShowNotifs(!showNotifs)}>
             <Bell size={18} />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs flex items-center justify-center">3</span>
+            {(() => {
+              const stored = typeof window !== 'undefined' ? localStorage.getItem('notifications') : null
+              const count = stored ? JSON.parse(stored).length : 0
+              return count > 0 ? (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs flex items-center justify-center">{count}</span>
+              ) : null
+            })()}
           </button>
 
           {showNotifs && (

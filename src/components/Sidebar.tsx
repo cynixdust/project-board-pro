@@ -1,7 +1,7 @@
 import { useAppStore } from '../store'
 import type { ViewType, Project } from '../types'
 import { LayoutList, KanbanSquare, GanttChart, FileText, Target, Clock, FolderOpen, Plus, ChevronDown, BarChart3, Settings, Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 const viewConfig: { id: ViewType; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <BarChart3 size={18} /> },
@@ -18,12 +18,11 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
   const { currentView, setCurrentView, projects, currentProject, setCurrentProject, addProject, updateProject, deleteProject } = useAppStore()
   const [showProjects, setShowProjects] = useState(true)
   const [newProjectName, setNewProjectName] = useState('')
-  const [newProjectIcon, setNewProjectIcon] = useState('folder')
+  const [newProjectIcon, setNewProjectIcon] = useState('')
   const [editingProject, setEditingProject] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
-
-  const iconOptions = ['folder', 'globe', 'smartphone', 'megaphone', 'code', 'database', 'server', 'terminal', 'shield', 'chart']
-
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
   const handleAddProject = () => {
     if (!newProjectName.trim()) return
     addProject({
@@ -34,7 +33,7 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
       icon: newProjectIcon,
     })
     setNewProjectName('')
-    setNewProjectIcon('folder')
+    setNewProjectIcon('')
   }
 
   return (
@@ -142,15 +141,27 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
               ))}
 
               <div className="flex gap-1 mt-2">
-                <select
-                  value={newProjectIcon}
-                  onChange={e => setNewProjectIcon(e.target.value)}
-                  className="bg-gray-800 border border-gray-700 rounded px-1 py-1 text-xs text-white"
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-gray-300 hover:bg-gray-700"
                 >
-                  {iconOptions.map(icon => (
-                    <option key={icon} value={icon}>{icon}</option>
-                  ))}
-                </select>
+                  {newProjectIcon ? 'Icon ✓' : 'Icon'}
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e: any) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const reader = new FileReader()
+                    reader.onload = (ev: any) => {
+                      setNewProjectIcon(ev.target?.result)
+                    }
+                    reader.readAsDataURL(file)
+                  }}
+                />
                 <input
                   value={newProjectName}
                   onChange={e => setNewProjectName(e.target.value)}
