@@ -327,6 +327,29 @@ export const useAppStore = create<AppState>()(
         currentSettingsTab: state.currentSettingsTab,
         logoUrl: state.logoUrl,
       }),
+      migrate: (persistedState: any) => {
+        const state = persistedState || {}
+        return {
+          tasks: (state.tasks || []).map((t: any) => ({
+            ...t,
+            tags: t.tags || [],
+            subtasks: t.subtasks || [],
+            comments: t.comments || [],
+          })),
+          projects: state.projects || defaultProjects,
+          goals: state.goals || [],
+          timeEntries: state.timeEntries || [],
+          docPages: state.docPages || [],
+          users: state.users || defaultUsers,
+          currentUser: state.currentUser || null,
+          currentProject: state.currentProject || 'p1',
+          currentView: state.currentView || 'dashboard',
+          currentSettingsTab: state.currentSettingsTab || 'export',
+          logoUrl: state.logoUrl || null,
+          activeTimeEntry: null,
+          timeTrackingStart: null,
+        } as any
+      },
     }
   )
 )

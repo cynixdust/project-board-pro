@@ -29,6 +29,10 @@ export function TaskCard({ task, index, overlay }: { task: Task; index: number; 
     opacity: isDragging ? 0.5 : 1,
   }
 
+  const tags = task.tags || []
+  const subtasks = task.subtasks || []
+  const comments = task.comments || []
+
   return (
     <div
       ref={overlay ? undefined : setNodeRef}
@@ -43,10 +47,10 @@ export function TaskCard({ task, index, overlay }: { task: Task; index: number; 
           <span className="text-xs font-medium text-gray-400 uppercase">{priorityIcons[task.priority]}</span>
         </div>
         <div className="flex items-center gap-1">
-          {task.subtasks.length > 0 && (
+          {subtasks.length > 0 && (
             <span className="text-xs text-gray-400 flex items-center gap-1">
               <CheckSquare size={12} />
-              {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
+              {subtasks.filter(st => st.completed).length}/{subtasks.length}
             </span>
           )}
           <button onClick={() => { setIsEditing(true); setEditTitle(task.title) }} className="text-gray-500 hover:text-white">
@@ -79,7 +83,7 @@ export function TaskCard({ task, index, overlay }: { task: Task; index: number; 
 
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2">
-          {task.tags.map(tag => (
+          {tags.map(tag => (
             <span key={tag} className="text-[10px] bg-gray-600 text-gray-300 px-1.5 py-0.5 rounded">
               {tag}
             </span>
@@ -93,10 +97,10 @@ export function TaskCard({ task, index, overlay }: { task: Task; index: number; 
               {task.loggedHours}h
             </span>
           )}
-          {task.comments.length > 0 && (
+          {comments.length > 0 && (
             <span className="text-xs text-gray-400 flex items-center gap-1">
               <MessageSquare size={12} />
-              {task.comments.length}
+              {comments.length}
             </span>
           )}
           {assignee && (

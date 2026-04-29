@@ -105,9 +105,9 @@ export default function ListView() {
                       <span className={`font-medium ${task.status === 'done' ? 'line-through text-gray-500' : 'text-white'}`}>
                         {task.title}
                       </span>
-                      {task.tags.length > 0 && (
+                      {(task.tags || []).length > 0 && (
                         <div className="flex gap-1 mt-1">
-                          {task.tags.map(tag => (
+                          {(task.tags || []).map(tag => (
                             <span key={tag} className="text-[10px] bg-gray-600 text-gray-300 px-1 py-0.5 rounded">{tag}</span>
                           ))}
                         </div>
