@@ -20,12 +20,16 @@ export default function TaskForm({ task, onSave, onCancel }: {
     if (!title.trim()) return
     onSave({
       title: title.trim(),
+      description: '',
       status,
       priority,
       assigneeId: assigneeId || undefined,
       dueDate: dueDate || undefined,
       loggedHours: parseFloat(loggedHours) || 0,
       projectId: currentProject || '',
+      tags: [],
+      subtasks: [],
+      comments: [],
     })
   }
 
