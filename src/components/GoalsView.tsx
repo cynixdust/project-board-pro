@@ -15,6 +15,7 @@ export default function GoalsView() {
       ...newGoal,
       progress: 0,
       milestones: [],
+      projectId: currentProject || '',
     })
     setNewGoal({ title: '', description: '', targetDate: '' })
     setShowNew(false)

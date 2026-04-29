@@ -72,16 +72,19 @@ export default function Header({ onToggleSidebar, sidebarOpen }: { onToggleSideb
                 <h4 className="text-white font-medium text-sm">Notifications</h4>
               </div>
               <div className="max-h-64 overflow-y-auto">
-                {[
-                  { msg: 'Task "Design homepage" is overdue', time: '2 hours ago' },
-                  { msg: 'Sarah commented on "API docs"', time: '4 hours ago' },
-                  { msg: 'New milestone reached in "Launch MVP"', time: '1 day ago' },
-                ].map((n: any, i: number) => (
-                  <div key={i} className="p-3 border-b border-gray-600 hover:bg-gray-600/50">
-                    <p className="text-sm text-gray-200">{n.msg}</p>
-                    <p className="text-xs text-gray-400 mt-1">{n.time}</p>
-                  </div>
-                ))}
+                {(() => {
+                  const stored = typeof window !== 'undefined' ? localStorage.getItem('notifications') : null
+                  const notifications = stored ? JSON.parse(stored) : []
+                  if (notifications.length === 0) {
+                    return <p className="p-3 text-sm text-gray-400">No notifications</p>
+                  }
+                  return notifications.map((n: any, i: number) => (
+                    <div key={i} className="p-3 border-b border-gray-600 hover:bg-gray-600/50">
+                      <p className="text-sm text-gray-200">{n.msg}</p>
+                      <p className="text-xs text-gray-400 mt-1">{n.time}</p>
+                    </div>
+                  ))
+                })()}
               </div>
               <div className="p-2 border-t border-gray-600">
                 <button className="text-xs text-blue-400 hover:text-blue-300 w-full text-center">Mark all as read</button>

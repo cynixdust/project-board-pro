@@ -130,11 +130,11 @@ export default function LoginPage() {
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-300 mb-2">Name (* for admin)</label>
+              <label className="block text-sm text-gray-300 mb-2">Name</label>
               <input
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="John Doe or *Admin Name"
+                placeholder="John Doe"
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
               />
             </div>

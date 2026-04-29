@@ -18,8 +18,11 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
   const { currentView, setCurrentView, projects, currentProject, setCurrentProject, addProject, updateProject, deleteProject } = useAppStore()
   const [showProjects, setShowProjects] = useState(true)
   const [newProjectName, setNewProjectName] = useState('')
+  const [newProjectIcon, setNewProjectIcon] = useState('folder')
   const [editingProject, setEditingProject] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+
+  const iconOptions = ['folder', 'globe', 'smartphone', 'megaphone', 'code', 'database', 'server', 'terminal', 'shield', 'chart']
 
   const handleAddProject = () => {
     if (!newProjectName.trim()) return
@@ -28,9 +31,10 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
       description: '',
       color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
       members: [],
-      icon: 'folder',
+      icon: newProjectIcon,
     })
     setNewProjectName('')
+    setNewProjectIcon('folder')
   }
 
   return (
@@ -138,6 +142,15 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
               ))}
 
               <div className="flex gap-1 mt-2">
+                <select
+                  value={newProjectIcon}
+                  onChange={e => setNewProjectIcon(e.target.value)}
+                  className="bg-gray-800 border border-gray-700 rounded px-1 py-1 text-xs text-white"
+                >
+                  {iconOptions.map(icon => (
+                    <option key={icon} value={icon}>{icon}</option>
+                  ))}
+                </select>
                 <input
                   value={newProjectName}
                   onChange={e => setNewProjectName(e.target.value)}

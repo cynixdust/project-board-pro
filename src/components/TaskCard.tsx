@@ -1,8 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Clock, MessageSquare, CheckSquare, AlertTriangle, ArrowDown, ArrowUp } from 'lucide-react'
+import { GripVertical, Clock, MessageSquare, CheckSquare, AlertTriangle, ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react'
 import type { Task } from '../types'
 import { useAppStore } from '../store'
+import { useState } from 'react'
 
 const priorityIcons: Record<string, React.ReactNode> = {
   urgent: <AlertTriangle size={14} className="text-red-500" />,
@@ -12,8 +13,10 @@ const priorityIcons: Record<string, React.ReactNode> = {
 }
 
 export function TaskCard({ task, index, overlay }: { task: Task; index: number; overlay?: boolean }) {
-  const { users } = useAppStore()
+  const { users, updateTask, deleteTask } = useAppStore()
   const assignee = users.find(u => u.id === task.assigneeId)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(task.title)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -39,15 +42,37 @@ export function TaskCard({ task, index, overlay }: { task: Task; index: number; 
           {!overlay && <GripVertical size={14} className="text-gray-500 cursor-grab" />}
           <span className="text-xs font-medium text-gray-400 uppercase">{priorityIcons[task.priority]}</span>
         </div>
-        {task.subtasks.length > 0 && (
-          <span className="text-xs text-gray-400 flex items-center gap-1">
-            <CheckSquare size={12} />
-            {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {task.subtasks.length > 0 && (
+            <span className="text-xs text-gray-400 flex items-center gap-1">
+              <CheckSquare size={12} />
+              {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
+            </span>
+          )}
+          <button onClick={() => { setIsEditing(true); setEditTitle(task.title) }} className="text-gray-500 hover:text-white">
+            <Pencil size={12} />
+          </button>
+          <button onClick={() => deleteTask(task.id)} className="text-gray-500 hover:text-red-400">
+            <Trash2 size={12} />
+          </button>
+        </div>
       </div>
 
-      <h4 className="text-sm font-medium text-white mb-1">{task.title}</h4>
+      {isEditing ? (
+        <input
+          value={editTitle}
+          onChange={e => setEditTitle(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') { updateTask(task.id, { title: editTitle }); setIsEditing(false) }
+            if (e.key === 'Escape') setIsEditing(false)
+          }}
+          className="text-sm bg-gray-600 text-white px-2 py-1 rounded w-full mb-1"
+          autoFocus
+        />
+      ) : (
+        <h4 className="text-sm font-medium text-white mb-1">{task.title}</h4>
+      )}
+
       {task.description && (
         <p className="text-xs text-gray-400 mb-2 line-clamp-2">{task.description}</p>
       )}
