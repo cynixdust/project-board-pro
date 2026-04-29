@@ -1,6 +1,6 @@
 import { useAppStore } from '../store'
 import type { ViewType, Project } from '../types'
-import { LayoutList, KanbanSquare, GanttChart, FileText, Target, Clock, FolderOpen, Plus, ChevronDown, BarChart3, Settings } from 'lucide-react'
+import { LayoutList, KanbanSquare, GanttChart, FileText, Target, Clock, FolderOpen, Plus, ChevronDown, BarChart3, Settings, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 const viewConfig: { id: ViewType; label: string; icon: React.ReactNode }[] = [
@@ -15,9 +15,11 @@ const viewConfig: { id: ViewType; label: string; icon: React.ReactNode }[] = [
 ]
 
 export default function Sidebar({ isOpen }: { isOpen: boolean }) {
-  const { currentView, setCurrentView, projects, currentProject, setCurrentProject, addProject } = useAppStore()
+  const { currentView, setCurrentView, projects, currentProject, setCurrentProject, addProject, updateProject, deleteProject } = useAppStore()
   const [showProjects, setShowProjects] = useState(true)
   const [newProjectName, setNewProjectName] = useState('')
+  const [editingProject, setEditingProject] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
 
   const handleAddProject = () => {
     if (!newProjectName.trim()) return
@@ -71,18 +73,68 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
           {showProjects && (
             <div className="space-y-1">
               {projects.map((project: Project) => (
-                <button
+                <div
                   key={project.id}
-                  onClick={() => setCurrentProject(project.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                     currentProject === project.id
                       ? 'bg-gray-800 text-white'
                       : 'hover:bg-gray-800 text-gray-300'
                   }`}
                 >
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: project.color }} />
-                  {project.name}
-                </button>
+                  {editingProject === project.id ? (
+                    <>
+                      <input
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            updateProject(project.id, { name: editName })
+                            setEditingProject(null)
+                          }
+                          if (e.key === 'Escape') setEditingProject(null)
+                        }}
+                        className="flex-1 bg-gray-700 text-white text-xs px-2 py-1 rounded"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          updateProject(project.id, { name: editName })
+                          setEditingProject(null)
+                        }}
+                        className="text-green-400 hover:text-green-300"
+                      >
+                        ✓
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => setCurrentProject(project.id)}
+                        className="flex-1 flex items-center gap-3 text-left"
+                      >
+                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: project.color }} />
+                        {project.name}
+                      </button>
+                      <button
+                        onClick={() => { setEditingProject(project.id); setEditName(project.name) }}
+                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Delete this project?')) {
+                            deleteProject(project.id)
+                            if (currentProject === project.id) setCurrentProject(projects[0]?.id || null)
+                          }
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-400 transition-opacity"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </>
+                  )}
+                </div>
               ))}
 
               <div className="flex gap-1 mt-2">
