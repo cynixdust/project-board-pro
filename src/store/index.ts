@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { v4 as uuid } from 'uuid'
 import type { Task, Project, Goal, TimeEntry, DocPage, ViewType, Status, User } from '../types'
 
@@ -75,7 +76,9 @@ const defaultTasks: Task[] = [
 
 
 
-export const useAppStore = create<AppState>((set, get) => ({
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
   tasks: defaultTasks,
   projects: defaultProjects,
   goals: [
@@ -96,10 +99,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentSettingsTab: 'export',
   activeTimeEntry: null,
   timeTrackingStart: null,
-  logoUrl: typeof window !== 'undefined' ? localStorage.getItem('app_logo') : null,
-  currentUser: typeof window !== 'undefined' && localStorage.getItem('current_user_id')
-    ? defaultUsers.find(u => u.id === localStorage.getItem('current_user_id')) || defaultUsers[0]
-    : null,
+  logoUrl: null,
+  currentUser: null,
 
   setCurrentView: (view) => set({ currentView: view }),
   setCurrentSettingsTab: (tab) => set({ currentSettingsTab: tab }),
@@ -310,4 +311,22 @@ export const useAppStore = create<AppState>((set, get) => ({
     const projectTasks = get().tasks.filter(t => t.projectId === projectId).map(t => t.id)
     return get().timeEntries.filter(te => projectTasks.includes(te.taskId))
   },
-}))
+}),
+    {
+      name: 'project-board-storage',
+      partialize: (state) => ({
+        tasks: state.tasks,
+        projects: state.projects,
+        goals: state.goals,
+        timeEntries: state.timeEntries,
+        docPages: state.docPages,
+        users: state.users,
+        currentUser: state.currentUser,
+        currentProject: state.currentProject,
+        currentView: state.currentView,
+        currentSettingsTab: state.currentSettingsTab,
+        logoUrl: state.logoUrl,
+      }),
+    }
+  )
+)
