@@ -1,7 +1,8 @@
 import { useAppStore } from '../store'
-import { Search, Filter, ArrowUpDown, CheckSquare, Square } from 'lucide-react'
+import { Search, Filter, ArrowUpDown, CheckSquare, Square, Plus } from 'lucide-react'
 import { useState } from 'react'
-import type { Priority, Status } from '../types'
+import type { Priority, Status, Task } from '../types'
+import TaskForm from './TaskForm'
 
 const priorityColors: Record<Priority, string> = {
   urgent: 'bg-red-500',
@@ -21,8 +22,9 @@ const statusLabels: Record<Status, string> = {
 export default function ListView() {
   const { tasks, currentProject, updateTask, addTask, deleteTask, users } = useAppStore()
   const [search, setSearch] = useState('')
-  const [newTaskTitle, setNewTaskTitle] = useState('')
   const [sortBy, setSortBy] = useState<'priority' | 'dueDate' | 'status'>('priority')
+  const [showForm, setShowForm] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const projectTasks = tasks
     .filter(t => t.projectId === currentProject)
@@ -37,19 +39,18 @@ export default function ListView() {
     })
 
   const handleAddTask = () => {
-    if (!newTaskTitle.trim()) return
-    addTask({
-      title: newTaskTitle,
-      description: '',
-      status: 'todo',
-      priority: 'medium',
-      projectId: currentProject || '',
-      tags: [],
-      loggedHours: 0,
-      subtasks: [],
-      comments: [],
-    })
-    setNewTaskTitle('')
+    setEditingTask(null)
+    setShowForm(true)
+  }
+
+  const handleSaveTask = (data: any) => {
+    if (editingTask) {
+      updateTask(editingTask.id, data)
+    } else {
+      addTask(data)
+    }
+    setShowForm(false)
+    setEditingTask(null)
   }
 
   return (
@@ -144,15 +145,19 @@ export default function ListView() {
         </table>
 
         <div className="flex gap-2 mt-3 p-2">
-          <input
-            value={newTaskTitle}
-            onChange={e => setNewTaskTitle(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAddTask()}
-            placeholder="+ Add task..."
-            className="flex-1 bg-gray-700/50 border border-gray-600 rounded px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-          />
+          <button onClick={handleAddTask} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white">
+            <Plus size={12} /> Add task
+          </button>
         </div>
       </div>
+
+      {showForm && (
+        <TaskForm
+          task={editingTask || undefined}
+          onSave={handleSaveTask}
+          onCancel={() => { setShowForm(false); setEditingTask(null) }}
+        />
+      )}
     </div>
   )
 }

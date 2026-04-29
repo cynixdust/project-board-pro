@@ -6,6 +6,7 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { Task, Status } from '../types'
+import TaskForm from './TaskForm'
 
 const columns: { id: Status; label: string; color: string }[] = [
   { id: 'backlog', label: 'Backlog', color: 'bg-gray-500' },
@@ -16,9 +17,10 @@ const columns: { id: Status; label: string; color: string }[] = [
 ]
 
 export default function BoardView() {
-  const { tasks, currentProject, moveTask, addTask } = useAppStore()
+  const { tasks, currentProject, moveTask, addTask, updateTask } = useAppStore()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
-  const [newTaskName, setNewTaskName] = useState<Record<string, string>>({})
+  const [showForm, setShowForm] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -48,21 +50,14 @@ export default function BoardView() {
     }
   }
 
-  const handleAddTask = (status: Status) => {
-    const title = newTaskName[status]?.trim()
-    if (!title) return
-    addTask({
-      title,
-      description: '',
-      status,
-      priority: 'medium',
-      projectId: currentProject || '',
-      tags: [],
-      loggedHours: 0,
-      subtasks: [],
-      comments: [],
-    })
-    setNewTaskName(prev => ({ ...prev, [status]: '' }))
+  const handleSaveTask = (data: any) => {
+    if (editingTask) {
+      updateTask(editingTask.id, data)
+    } else {
+      addTask(data)
+    }
+    setShowForm(false)
+    setEditingTask(null)
   }
 
   return (
@@ -78,7 +73,7 @@ export default function BoardView() {
                   <span className="text-sm font-semibold text-gray-300">{col.label}</span>
                   <span className="text-xs bg-gray-700 rounded-full px-2 py-0.5 text-gray-400">{colTasks.length}</span>
                 </div>
-                <button className="text-gray-500 hover:text-white">
+                <button onClick={() => { setEditingTask(null); setShowForm(true) }} className="text-gray-500 hover:text-white">
                   <Plus size={16} />
                 </button>
               </div>
@@ -86,24 +81,24 @@ export default function BoardView() {
               <SortableContext items={colTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                 <div className="flex-1 space-y-2 overflow-y-auto">
                   {colTasks.map((task, idx) => (
-                    <TaskCard key={task.id} task={task} index={idx} />
+                    <div key={task.id} onClick={() => { setEditingTask(task); setShowForm(true) }}>
+                      <TaskCard task={task} index={idx} />
+                    </div>
                   ))}
-
-                  <div className="flex gap-1">
-                    <input
-                      value={newTaskName[col.id] || ''}
-                      onChange={e => setNewTaskName(prev => ({ ...prev, [col.id]: e.target.value }))}
-                      onKeyDown={e => e.key === 'Enter' && handleAddTask(col.id)}
-                      placeholder="+ Add task..."
-                      className="flex-1 bg-gray-700/50 border border-gray-600 rounded px-2 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                    />
-                  </div>
                 </div>
               </SortableContext>
             </div>
           )
         })}
       </div>
+
+      {showForm && (
+        <TaskForm
+          task={editingTask || undefined}
+          onSave={handleSaveTask}
+          onCancel={() => { setShowForm(false); setEditingTask(null) }}
+        />
+      )}
 
       <DragOverlay>
         {activeTask ? <TaskCard task={activeTask} index={0} overlay /> : null}
