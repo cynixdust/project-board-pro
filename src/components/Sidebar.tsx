@@ -21,7 +21,9 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
   const [newProjectIcon, setNewProjectIcon] = useState('')
   const [editingProject, setEditingProject] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [editIcon, setEditIcon] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const editFileRef = useRef<HTMLInputElement>(null)
   
   const handleAddProject = () => {
     if (!newProjectName.trim()) return
@@ -91,7 +93,7 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
                         onChange={e => setEditName(e.target.value)}
                         onKeyDown={e => {
                           if (e.key === 'Enter') {
-                            updateProject(project.id, { name: editName })
+                            updateProject(project.id, { name: editName, icon: editIcon || project.icon })
                             setEditingProject(null)
                           }
                           if (e.key === 'Escape') setEditingProject(null)
@@ -101,23 +103,48 @@ export default function Sidebar({ isOpen }: { isOpen: boolean }) {
                       />
                       <button
                         onClick={() => {
-                          updateProject(project.id, { name: editName })
+                          updateProject(project.id, { name: editName, icon: editIcon || project.icon })
                           setEditingProject(null)
                         }}
                         className="text-green-400 hover:text-green-300"
                       >
                         ✓
                       </button>
+                      <button
+                        onClick={() => editFileRef.current?.click()}
+                        className="text-xs text-gray-400 hover:text-white"
+                      >
+                        {editIcon ? 'Icon ✓' : 'Icon'}
+                      </button>
+                      <input
+                        type="file"
+                        ref={editFileRef}
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e: any) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const reader = new FileReader()
+                          reader.onload = (ev: any) => {
+                            setEditIcon(ev.target?.result)
+                          }
+                          reader.readAsDataURL(file)
+                        }}
+                      />
                     </>
                   ) : (
-                    <>
-                      <button
-                        onClick={() => setCurrentProject(project.id)}
-                        className="flex-1 flex items-center gap-3 text-left"
-                      >
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: project.color }} />
-                        {project.name}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setCurrentProject(project.id)}
+                          className="flex-1 flex items-center gap-3 text-left"
+                        >
+                          {project.icon && project.icon.startsWith('data:') ? (
+                            <img src={project.icon} alt="" className="w-3 h-3 rounded-full object-cover" />
+                          ) : (
+                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: project.color }} />
+                          )}
+                          {project.name}
+                        </button>
                       <button
                         onClick={() => { setEditingProject(project.id); setEditName(project.name) }}
                         className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity"
