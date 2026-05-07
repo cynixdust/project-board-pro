@@ -53,6 +53,37 @@ export interface Project {
   icon: string
 }
 
+export type GoalType = 'vision' | 'objective' | 'goal' | 'subgoal'
+export type GoalStatus = 'not-started' | 'in-progress' | 'blocked' | 'completed'
+export type ReviewCadence = 'weekly' | 'monthly'
+
+export interface GoalComment {
+  id: string
+  userId: string
+  content: string
+  createdAt: string
+}
+
+export interface JournalEntry {
+  id: string
+  content: string
+  createdAt: string
+  mood?: 'great' | 'good' | 'neutral' | 'struggling' | 'stuck'
+}
+
+export interface ReviewEntry {
+  id: string
+  date: string
+  notes: string
+  progressAtReview: number
+  cadence: ReviewCadence
+}
+
+export interface HabitDay {
+  date: string
+  completed: boolean
+}
+
 export interface Goal {
   id: string
   title: string
@@ -62,6 +93,32 @@ export interface Goal {
   projectId?: string
   milestones: Milestone[]
   createdAt: string
+  startDate?: string
+  effort?: 'xs' | 's' | 'm' | 'l' | 'xl'
+  category?: string
+  priority?: 'low' | 'medium' | 'high' | 'urgent'
+  keyResults?: KeyResult[]
+  type: GoalType
+  parentId?: string
+  status: GoalStatus
+  tags: string[]
+  assigneeId?: string
+  collaboratorIds: string[]
+  comments: GoalComment[]
+  why?: string
+  journalEntries: JournalEntry[]
+  reviewCadence?: ReviewCadence
+  reviewHistory: ReviewEntry[]
+  isRecurring?: boolean
+  habitDays?: HabitDay[]
+}
+
+export interface KeyResult {
+  id: string
+  title: string
+  target: number
+  current: number
+  unit: string
 }
 
 export interface Milestone {

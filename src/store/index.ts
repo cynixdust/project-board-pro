@@ -1,7 +1,23 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { v4 as uuid } from 'uuid'
-import type { Task, Project, Goal, TimeEntry, DocPage, ViewType, Status, User } from '../types'
+import type { Task, Project, Goal, TimeEntry, DocPage, ViewType, Status, User, KeyResult, HabitDay } from '../types'
+
+const calculateHabitStreak = (days: HabitDay[]): number => {
+  const sorted = [...days].filter(d => d.completed).sort((a, b) => b.date.localeCompare(a.date))
+  if (sorted.length === 0) return 0
+  let streak = 1
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const curr = new Date(sorted[i].date)
+    const prev = new Date(sorted[i + 1].date)
+    const diff = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24))
+    if (diff === 1) streak++
+    else break
+  }
+  return streak
+}
 
 interface AppState {
   tasks: Task[]
@@ -33,6 +49,10 @@ interface AppState {
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => void
   updateGoal: (id: string, updates: Partial<Goal>) => void
   deleteGoal: (id: string) => void
+  addGoalComment: (goalId: string, content: string) => void
+  addGoalJournal: (goalId: string, content: string, mood?: string) => void
+  addGoalReview: (goalId: string, notes: string) => void
+  toggleGoalHabit: (goalId: string, date: string) => void
   addTimeEntry: (entry: Omit<TimeEntry, 'id'>) => void
   updateTimeEntry: (id: string, updates: Partial<TimeEntry>) => void
   deleteTimeEntry: (id: string) => void
@@ -82,8 +102,12 @@ export const useAppStore = create<AppState>()(
   tasks: defaultTasks,
   projects: defaultProjects,
   goals: [
-    { id: 'g1', title: 'Launch MVP', description: 'Complete core features and launch MVP', progress: 65, targetDate: '2026-06-30', projectId: 'p2', milestones: [{ id: 'm1', title: 'Core features', completed: true }, { id: 'm2', title: 'Beta testing', completed: false, dueDate: '2026-05-15' }, { id: 'm3', title: 'Production deploy', completed: false, dueDate: '2026-06-01' }], createdAt: '2026-01-01' },
-    { id: 'g2', title: 'Increase conversion rate', description: 'Improve landing page conversion from 2% to 5%', progress: 30, targetDate: '2026-07-31', projectId: 'p1', milestones: [{ id: 'm4', title: 'A/B test headlines', completed: true }, { id: 'm5', title: 'Optimize CTA buttons', completed: false }], createdAt: '2026-02-15' },
+    { id: 'g1', title: 'Launch MVP', description: 'Complete core features and launch MVP', progress: 65, targetDate: '2026-06-30', startDate: '2026-01-01', effort: 'l', category: 'Product', priority: 'high', type: 'objective', status: 'in-progress', tags: ['launch', 'product'], assigneeId: 'u1', collaboratorIds: ['u3'], comments: [{ id: 'gc1', userId: 'u1', content: 'Backend is nearly done, focusing on frontend now', createdAt: '2026-04-20' }], why: 'Establish market presence and get early user feedback', journalEntries: [{ id: 'gj1', content: 'Made great progress on auth this week', createdAt: '2026-04-22', mood: 'good' }], reviewCadence: 'weekly', reviewHistory: [{ id: 'gr1', date: '2026-04-14', notes: 'On track, auth 80% complete', progressAtReview: 55, cadence: 'weekly' }], isRecurring: false, keyResults: [{ id: 'kr1', title: 'User signups', target: 1000, current: 650, unit: 'users' }, { id: 'kr2', title: 'Feature completion', target: 100, current: 65, unit: '%' }], projectId: 'p2', milestones: [{ id: 'm1', title: 'Core features', completed: true }, { id: 'm2', title: 'Beta testing', completed: false, dueDate: '2026-05-15' }, { id: 'm3', title: 'Production deploy', completed: false, dueDate: '2026-06-01' }], createdAt: '2026-01-01' },
+    { id: 'g2', title: 'Increase conversion rate', description: 'Improve landing page conversion from 2% to 5%', progress: 30, targetDate: '2026-07-31', startDate: '2026-02-15', effort: 'm', category: 'Marketing', priority: 'medium', type: 'goal', status: 'in-progress', tags: ['growth', 'marketing'], assigneeId: 'u2', collaboratorIds: [], comments: [], why: 'Revenue growth depends on better conversion', journalEntries: [], reviewCadence: 'monthly', reviewHistory: [], isRecurring: false, keyResults: [{ id: 'kr3', title: 'Conversion rate', target: 5, current: 3, unit: '%' }, { id: 'kr4', title: 'A/B tests run', target: 10, current: 3, unit: 'tests' }], projectId: 'p1', milestones: [{ id: 'm4', title: 'A/B test headlines', completed: true }, { id: 'm5', title: 'Optimize CTA buttons', completed: false }], createdAt: '2026-02-15' },
+    { id: 'g3', title: 'Build world-class mobile experience', description: 'Create the best mobile app in our category', progress: 0, type: 'vision', status: 'in-progress', tags: ['vision', 'mobile'], assigneeId: 'u1', collaboratorIds: ['u2', 'u3'], comments: [], why: 'Mobile is where our users are', journalEntries: [], reviewCadence: 'monthly', reviewHistory: [], isRecurring: false, projectId: 'p2', milestones: [], createdAt: '2026-01-01' },
+    { id: 'g4', title: 'Implement user auth', description: 'Complete login, register, and password reset', progress: 80, targetDate: '2026-05-10', effort: 'm', category: 'Product', priority: 'high', type: 'subgoal', status: 'in-progress', tags: ['backend', 'security'], assigneeId: 'u3', collaboratorIds: ['u1'], comments: [{ id: 'gc2', userId: 'u3', content: 'Email verification is the last piece', createdAt: '2026-04-25' }], why: 'Secure access is foundational to the product', journalEntries: [], parentId: 'g1', projectId: 'p2', milestones: [], createdAt: '2026-03-01' },
+    { id: 'g5', title: 'Design onboarding flow', description: 'Create intuitive onboarding for new users', progress: 40, targetDate: '2026-05-20', effort: 's', category: 'Product', priority: 'medium', type: 'subgoal', status: 'in-progress', tags: ['design', 'ux'], assigneeId: 'u2', collaboratorIds: [], comments: [], why: 'First impressions drive retention', journalEntries: [], parentId: 'g1', projectId: 'p2', milestones: [], createdAt: '2026-03-15' },
+    { id: 'g6', title: 'Daily exercise routine', description: 'Exercise at least 4 times per week', progress: 70, effort: 's', category: 'Health', priority: 'high', type: 'goal', status: 'in-progress', tags: ['health', 'fitness'], assigneeId: 'u1', collaboratorIds: [], comments: [], why: 'Health is the foundation of productivity', journalEntries: [{ id: 'gj2', content: 'Feeling more energized after 3 weeks', createdAt: '2026-04-20', mood: 'great' }], isRecurring: true, habitDays: [{ date: '2026-04-21', completed: true }, { date: '2026-04-22', completed: true }, { date: '2026-04-23', completed: false }, { date: '2026-04-24', completed: true }, { date: '2026-04-25', completed: true }, { date: '2026-04-26', completed: true }, { date: '2026-04-27', completed: true }], reviewCadence: 'weekly', reviewHistory: [], projectId: 'p1', milestones: [], createdAt: '2026-04-01' },
   ],
   timeEntries: [
     { id: 'te1', taskId: 't1', userId: 'u2', duration: 14400, date: '2026-04-20', notes: 'Worked on wireframes', startTime: '09:00', endTime: '13:00' },
@@ -209,7 +233,7 @@ export const useAppStore = create<AppState>()(
   }),
 
   addGoal: (goal) => set((state) => {
-    const newState = { goals: [...state.goals, { ...goal, id: uuid(), createdAt: new Date().toISOString() }] }
+    const newState = { goals: [...state.goals, { ...goal, id: uuid(), createdAt: new Date().toISOString(), status: goal.status || 'not-started', tags: goal.tags || [], collaboratorIds: goal.collaboratorIds || [], comments: goal.comments || [], journalEntries: goal.journalEntries || [], reviewHistory: goal.reviewHistory || [], habitDays: goal.habitDays || [] }] }
     setTimeout(() => get().saveToSqlite(), 1000)
     return newState
   }),
@@ -225,6 +249,41 @@ export const useAppStore = create<AppState>()(
     setTimeout(() => get().saveToSqlite(), 1000)
     return newState
   }),
+
+  addGoalComment: (goalId, content) => set((state) => ({
+    goals: state.goals.map(g => g.id === goalId
+      ? { ...g, comments: [...g.comments, { id: uuid(), userId: state.currentUser?.id || '', content, createdAt: new Date().toISOString() }] }
+      : g
+    ),
+  })),
+
+  addGoalJournal: (goalId, content, mood) => set((state) => ({
+    goals: state.goals.map(g => g.id === goalId
+      ? { ...g, journalEntries: [...g.journalEntries, { id: uuid(), content, mood: mood as any, createdAt: new Date().toISOString() }] }
+      : g
+    ),
+  })),
+
+  addGoalReview: (goalId, notes) => set((state) => ({
+    goals: state.goals.map(g => g.id === goalId
+      ? { ...g, reviewHistory: [...g.reviewHistory, { id: uuid(), date: new Date().toISOString().split('T')[0], notes, progressAtReview: g.progress, cadence: g.reviewCadence || 'weekly' }] }
+      : g
+    ),
+  })),
+
+  toggleGoalHabit: (goalId, date) => set((state) => ({
+    goals: state.goals.map(g => {
+      if (g.id !== goalId) return g
+      const days = g.habitDays || []
+      const existing = days.find(d => d.date === date)
+      const updatedDays = existing
+        ? days.map(d => d.date === date ? { ...d, completed: !d.completed } : d)
+        : [...days, { date, completed: true }]
+      const streak = calculateHabitStreak(updatedDays)
+      const newProgress = Math.min(100, streak * 10)
+      return { ...g, habitDays: updatedDays, progress: newProgress }
+    }),
+  })),
 
   addTimeEntry: (entry) => set((state) => {
     const newState = {
@@ -337,7 +396,18 @@ export const useAppStore = create<AppState>()(
             comments: t.comments || [],
           })),
           projects: state.projects || defaultProjects,
-          goals: state.goals || [],
+          goals: (state.goals || []).map((g: any) => ({
+            ...g,
+            keyResults: g.keyResults || [],
+            type: g.type || 'goal',
+            status: g.status || 'not-started',
+            tags: g.tags || [],
+            collaboratorIds: g.collaboratorIds || [],
+            comments: g.comments || [],
+            journalEntries: g.journalEntries || [],
+            reviewHistory: g.reviewHistory || [],
+            habitDays: g.habitDays || [],
+          })),
           timeEntries: state.timeEntries || [],
           docPages: state.docPages || [],
           users: state.users || defaultUsers,
