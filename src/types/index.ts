@@ -100,15 +100,15 @@ export interface Goal {
   keyResults?: KeyResult[]
   type: GoalType
   parentId?: string
-  status: GoalStatus
-  tags: string[]
+  status?: GoalStatus
+  tags?: string[]
   assigneeId?: string
-  collaboratorIds: string[]
-  comments: GoalComment[]
+  collaboratorIds?: string[]
+  comments?: GoalComment[]
   why?: string
-  journalEntries: JournalEntry[]
+  journalEntries?: JournalEntry[]
   reviewCadence?: ReviewCadence
-  reviewHistory: ReviewEntry[]
+  reviewHistory?: ReviewEntry[]
   isRecurring?: boolean
   habitDays?: HabitDay[]
 }
