@@ -1,9 +1,8 @@
 import { useAppStore } from '../store'
 import {
-  Target, Plus, Trash2, Check, Circle, Tag, Calendar, Clock, TrendingUp, Award,
+  Target, Plus, Trash2, Check, Circle, Tag, Calendar, TrendingUp, Award,
   ChevronDown, ChevronRight, Eye, Layers, GitBranch, MessageSquare, BookOpen,
-  History, Flame, User, Users, Lightbulb, AlertCircle, Play, PauseCircle,
-  XCircle, SquareCheck, BarChart3, NotebookPen, Repeat
+  History, Flame, Users, Lightbulb, AlertCircle, Play, SquareCheck, BarChart3, NotebookPen, Repeat
 } from 'lucide-react'
 import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
@@ -214,7 +213,6 @@ export default function GoalsView() {
     const tab = activeGoalTab[goal.id] || 'progress'
     const streak = getHabitStreak(goal.id)
     const today = new Date().toISOString().split('T')[0]
-    const todayDone = goal.habitDays?.find(d => d.date === today)?.completed
 
     return (
       <div key={goal.id} className={`bg-gray-700 rounded-lg overflow-hidden ${depth > 0 ? 'ml-6 border-l-2 border-gray-600' : ''}`}>
@@ -442,7 +440,7 @@ export default function GoalsView() {
                   <button onClick={() => { if (commentInput[goal.id]?.trim()) { addGoalComment(goal.id, commentInput[goal.id]); setCommentInput(prev => ({ ...prev, [goal.id]: '' })) } }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm">Send</button>
                 </div>
-                {goal.comments.map(c => (
+                {(goal.comments || []).map(c => (
                   <div key={c.id} className="bg-gray-600 rounded p-2">
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-[8px] text-white font-bold">
