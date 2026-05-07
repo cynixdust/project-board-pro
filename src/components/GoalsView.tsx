@@ -491,7 +491,7 @@ export default function GoalsView() {
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm">Save</button>
                   </div>
                 </div>
-                {goal.journalEntries.map(j => (
+                {(goal.journalEntries || []).map(j => (
                   <div key={j.id} className="bg-gray-600 rounded p-2">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs">{moodConfig[j.mood || '']?.emoji || '📝'}</span>
@@ -525,12 +525,12 @@ export default function GoalsView() {
                 </div>
               </div>
 
-              {goal.reviewHistory.length > 0 && (
+              {(goal.reviewHistory || []).length > 0 && (
                 <div className="space-y-2">
                   <h5 className="text-xs font-semibold text-gray-400 uppercase flex items-center gap-1">
                     <History size={12} /> Review History
                   </h5>
-                  {goal.reviewHistory.map(r => (
+                  {(goal.reviewHistory || []).map(r => (
                     <div key={r.id} className="bg-gray-600 rounded p-2">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs text-gray-300">{formatDate(r.date)}</span>
@@ -578,7 +578,7 @@ export default function GoalsView() {
     )
   }
 
-  const { rootGoals, childrenMap } = buildHierarchy()
+  const { rootGoals } = buildHierarchy()
   const orphanedGoals = projectGoals.filter(g => g.parentId && !goals.find(p => p.id === g.parentId))
 
   return (

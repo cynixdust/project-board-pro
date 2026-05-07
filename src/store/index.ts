@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { v4 as uuid } from 'uuid'
-import type { Task, Project, Goal, TimeEntry, DocPage, ViewType, Status, User, KeyResult, HabitDay } from '../types'
+import type { Task, Project, Goal, TimeEntry, DocPage, ViewType, Status, User, HabitDay } from '../types'
 
 const calculateHabitStreak = (days: HabitDay[]): number => {
   const sorted = [...days].filter(d => d.completed).sort((a, b) => b.date.localeCompare(a.date))
@@ -252,21 +252,21 @@ export const useAppStore = create<AppState>()(
 
   addGoalComment: (goalId, content) => set((state) => ({
     goals: state.goals.map(g => g.id === goalId
-      ? { ...g, comments: [...g.comments, { id: uuid(), userId: state.currentUser?.id || '', content, createdAt: new Date().toISOString() }] }
+      ? { ...g, comments: [...(g.comments || []), { id: uuid(), userId: state.currentUser?.id || '', content, createdAt: new Date().toISOString() }] }
       : g
     ),
   })),
 
   addGoalJournal: (goalId, content, mood) => set((state) => ({
     goals: state.goals.map(g => g.id === goalId
-      ? { ...g, journalEntries: [...g.journalEntries, { id: uuid(), content, mood: mood as any, createdAt: new Date().toISOString() }] }
+      ? { ...g, journalEntries: [...(g.journalEntries || []), { id: uuid(), content, mood: mood as any, createdAt: new Date().toISOString() }] }
       : g
     ),
   })),
 
   addGoalReview: (goalId, notes) => set((state) => ({
     goals: state.goals.map(g => g.id === goalId
-      ? { ...g, reviewHistory: [...g.reviewHistory, { id: uuid(), date: new Date().toISOString().split('T')[0], notes, progressAtReview: g.progress, cadence: g.reviewCadence || 'weekly' }] }
+      ? { ...g, reviewHistory: [...(g.reviewHistory || []), { id: uuid(), date: new Date().toISOString().split('T')[0], notes, progressAtReview: g.progress, cadence: g.reviewCadence || 'weekly' }] }
       : g
     ),
   })),
