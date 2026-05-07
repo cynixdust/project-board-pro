@@ -1,7 +1,7 @@
 import { useAppStore } from '../store'
 import { useState } from 'react'
 import { Image, Plus, Pencil, Trash2 } from 'lucide-react'
-import * as XLSX from 'xlsx'
+import * as XLSX from '@e965/xlsx'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 import { saveAs } from 'file-saver'
