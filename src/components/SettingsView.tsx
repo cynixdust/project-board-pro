@@ -14,7 +14,6 @@ export default function SettingsView() {
   const [backupMessage, setBackupMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [gistSyncing, setGistSyncing] = useState(false)
   const [gistTokenInput, setGistTokenInput] = useState(gistToken)
-  const [showManualGist, setShowManualGist] = useState(false)
   const importRef = useRef<HTMLInputElement>(null)
 
   const projectTasks = tasks.filter(t => t.projectId === currentProject)
