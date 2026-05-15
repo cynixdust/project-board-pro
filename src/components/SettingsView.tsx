@@ -14,6 +14,7 @@ export default function SettingsView() {
   const [backupMessage, setBackupMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [gistSyncing, setGistSyncing] = useState(false)
   const [gistTokenInput, setGistTokenInput] = useState(gistToken)
+  const [showManualGist, setShowManualGist] = useState(false)
   const importRef = useRef<HTMLInputElement>(null)
 
   const projectTasks = tasks.filter(t => t.projectId === currentProject)
@@ -227,6 +228,31 @@ export default function SettingsView() {
                   </button>
                 )}
               </div>
+
+              <details className="mt-4">
+                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-300">
+                  Manual backup (if API sync fails)
+                </summary>
+                <div className="mt-3 bg-gray-800 p-3 rounded space-y-2">
+                  <p className="text-xs text-gray-400">
+                    If your network blocks the GitHub API, you can manually copy your data to a Gist:
+                  </p>
+                  <ol className="text-xs text-gray-400 list-decimal ml-4 space-y-1">
+                    <li>Click <strong>"Download Full Backup"</strong> above to get your data as JSON</li>
+                    <li>Go to <a href="https://gist.github.com" target="_blank" className="text-blue-400 underline">gist.github.com</a></li>
+                    <li>Drag your backup file into the Gist editor (or paste its content)</li>
+                    <li>Name the file <code className="text-blue-400">project-board-backup.json</code></li>
+                    <li>Click <strong>Create secret Gist</strong></li>
+                    <li>Copy the Gist ID from the URL (e.g. <code className="text-blue-400">gist.github.com/yourname/<strong>abc123</strong></code>)</li>
+                    <li>Paste the Gist ID in the field above and click <strong>Save</strong></li>
+                    <li>To restore later, paste your token + Gist ID and click <strong>Pull from Gist</strong></li>
+                  </ol>
+                  <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(exportData(), null, 2)); showMsg('success', 'Backup JSON copied to clipboard!') }}
+                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded">
+                    Copy Backup JSON to Clipboard
+                  </button>
+                </div>
+              </details>
             </div>
           </div>
         )}

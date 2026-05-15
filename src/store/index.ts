@@ -263,11 +263,16 @@ export const useAppStore = create<AppState>()(
         : 'https://api.github.com/gists'
       const method = state.gistId ? 'PATCH' : 'POST'
 
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15000)
+
       const res = await fetch(url, {
         method,
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       })
+      clearTimeout(timeout)
 
       if (!res.ok) {
         const text = await res.text()
@@ -278,7 +283,8 @@ export const useAppStore = create<AppState>()(
       set({ gistId: gist.id, gistLastSynced: new Date().toISOString() })
       return null
     } catch (e: any) {
-      return `Network error: ${e.message}. Check your internet connection or if a firewall/extension is blocking api.github.com`
+      if (e.name === 'AbortError') return 'Request timed out. api.github.com may be blocked by your network or a browser extension.'
+      return `Network error: ${e.message}. This is usually caused by a firewall, VPN, or ad blocker blocking api.github.com. Use manual backup instead.`
     }
   },
 
