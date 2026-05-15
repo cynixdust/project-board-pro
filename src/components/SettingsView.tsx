@@ -1,6 +1,6 @@
 import { useAppStore } from '../store'
 import { useState, useRef } from 'react'
-import { Image, Plus, Pencil, Trash2, Download, Upload, Github, Cloud, CloudOff, RefreshCw } from 'lucide-react'
+import { Image, Plus, Pencil, Trash2, Download, Upload, GitBranch, Cloud, CloudOff, RefreshCw } from 'lucide-react'
 import * as XLSX from '@e965/xlsx'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
@@ -167,7 +167,7 @@ export default function SettingsView() {
 
             <div className="bg-gray-700 p-5 rounded-lg">
               <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                <Github size={16} /> GitHub Gist Sync <span className="text-xs text-gray-400">(Automatic Cloud Backup)</span>
+                <GitBranch size={16} /> GitHub Gist Sync <span className="text-xs text-gray-400">(Automatic Cloud Backup)</span>
               </h4>
               <p className="text-sm text-gray-400 mb-4">
                 Connect your GitHub account via a Personal Access Token to automatically back up your data to a private GitHub Gist.
