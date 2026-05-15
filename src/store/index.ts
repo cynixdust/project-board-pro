@@ -71,6 +71,15 @@ interface AppState {
   getProjectGoals: (projectId: string) => Goal[]
   getProjectTimeEntries: (projectId: string) => TimeEntry[]
   saveToSqlite: () => Promise<void>
+  exportData: () => any
+  importData: (data: any) => void
+  gistToken: string
+  gistId: string
+  gistLastSynced: string | null
+  setGistToken: (token: string) => void
+  setGistId: (id: string) => void
+  syncToGist: () => Promise<string | null>
+  loadFromGist: () => Promise<boolean>
 }
 
 const defaultUsers: User[] = [
@@ -125,6 +134,9 @@ export const useAppStore = create<AppState>()(
   timeTrackingStart: null,
   logoUrl: null,
   currentUser: null,
+  gistToken: '',
+  gistId: '',
+  gistLastSynced: null,
 
   setCurrentView: (view) => set({ currentView: view }),
   setCurrentSettingsTab: (tab) => set({ currentSettingsTab: tab }),
@@ -187,6 +199,103 @@ export const useAppStore = create<AppState>()(
       db.close()
     } catch {
       console.log('SQLite save failed')
+    }
+  },
+
+  exportData: () => {
+    const state = get()
+    return {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      tasks: state.tasks,
+      projects: state.projects,
+      goals: state.goals,
+      timeEntries: state.timeEntries,
+      docPages: state.docPages,
+      users: state.users,
+    }
+  },
+
+  importData: (data) => set((state) => {
+    const merged = {
+      ...state,
+      tasks: data.tasks || state.tasks,
+      projects: data.projects || state.projects,
+      goals: data.goals || state.goals,
+      timeEntries: data.timeEntries || state.timeEntries,
+      docPages: data.docPages || state.docPages,
+      users: data.users || state.users,
+    }
+    setTimeout(() => get().saveToSqlite(), 1000)
+    return merged
+  }),
+
+  setGistToken: (token) => set({ gistToken: token }),
+  setGistId: (id) => set({ gistId: id }),
+
+  syncToGist: async () => {
+    const state = get()
+    if (!state.gistToken) return 'No token set'
+
+    const payload = {
+      description: 'Project Board Pro - Auto Backup',
+      public: false,
+      files: {
+        'project-board-backup.json': {
+          content: JSON.stringify({
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            tasks: state.tasks,
+            projects: state.projects,
+            goals: state.goals,
+            timeEntries: state.timeEntries,
+            docPages: state.docPages,
+            users: state.users,
+          }, null, 2),
+        },
+      },
+    }
+
+    try {
+      let res
+      if (state.gistId) {
+        res = await fetch(`https://api.github.com/gists/${state.gistId}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `Bearer ${state.gistToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      } else {
+        res = await fetch('https://api.github.com/gists', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${state.gistToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
+      if (!res.ok) return `GitHub API error: ${res.status}`
+      const gist = await res.json()
+      set({ gistId: gist.id, gistLastSynced: new Date().toISOString() })
+      return null
+    } catch (e: any) {
+      return `Sync failed: ${e.message}`
+    }
+  },
+
+  loadFromGist: async () => {
+    const state = get()
+    if (!state.gistToken || !state.gistId) return false
+    try {
+      const res = await fetch(`https://api.github.com/gists/${state.gistId}`, {
+        headers: { 'Authorization': `Bearer ${state.gistToken}` },
+      })
+      if (!res.ok) return false
+      const gist = await res.json()
+      const content = gist.files?.['project-board-backup.json']?.content
+      if (!content) return false
+      const data = JSON.parse(content)
+      get().importData(data)
+      return true
+    } catch {
+      return false
     }
   },
 
@@ -385,6 +494,9 @@ export const useAppStore = create<AppState>()(
         currentView: state.currentView,
         currentSettingsTab: state.currentSettingsTab,
         logoUrl: state.logoUrl,
+        gistToken: state.gistToken,
+        gistId: state.gistId,
+        gistLastSynced: state.gistLastSynced,
       }),
       migrate: (persistedState: any) => {
         const state = persistedState || {}
@@ -416,6 +528,9 @@ export const useAppStore = create<AppState>()(
           currentView: state.currentView || 'dashboard',
           currentSettingsTab: state.currentSettingsTab || 'export',
           logoUrl: state.logoUrl || null,
+          gistToken: state.gistToken || '',
+          gistId: state.gistId || '',
+          gistLastSynced: state.gistLastSynced || null,
           activeTimeEntry: null,
           timeTrackingStart: null,
         } as any
