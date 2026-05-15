@@ -258,26 +258,27 @@ export const useAppStore = create<AppState>()(
     }
 
     try {
-      let res
-      if (state.gistId) {
-        res = await fetch(`https://api.github.com/gists/${state.gistId}`, {
-          method: 'PATCH',
-          headers: { 'Authorization': `Bearer ${state.gistToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-      } else {
-        res = await fetch('https://api.github.com/gists', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${state.gistToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
+      const url = state.gistId
+        ? `https://api.github.com/gists/${state.gistId}`
+        : 'https://api.github.com/gists'
+      const method = state.gistId ? 'PATCH' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const text = await res.text()
+        return `GitHub API error (${res.status}): ${text.slice(0, 200)}`
       }
-      if (!res.ok) return `GitHub API error: ${res.status}`
+
       const gist = await res.json()
       set({ gistId: gist.id, gistLastSynced: new Date().toISOString() })
       return null
     } catch (e: any) {
-      return `Sync failed: ${e.message}`
+      return `Network error: ${e.message}. Check your internet connection or if a firewall/extension is blocking api.github.com`
     }
   },
 
