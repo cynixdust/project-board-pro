@@ -235,7 +235,8 @@ export const useAppStore = create<AppState>()(
 
   syncToGist: async () => {
     const state = get()
-    if (!state.gistToken) return 'No token set'
+    const token = state.gistToken
+    if (!token) return 'No token set'
 
     const payload = {
       description: 'Project Board Pro - Auto Backup',

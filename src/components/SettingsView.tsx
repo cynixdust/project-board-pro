@@ -50,6 +50,7 @@ export default function SettingsView() {
 
   const handleSyncToGist = async () => {
     setGistSyncing(true)
+    setGistToken(gistTokenInput)
     const err = await syncToGist()
     setGistSyncing(false)
     if (err) showMsg('error', err)
@@ -58,6 +59,7 @@ export default function SettingsView() {
 
   const handleLoadFromGist = async () => {
     setGistSyncing(true)
+    setGistToken(gistTokenInput)
     const ok = await loadFromGist()
     setGistSyncing(false)
     if (ok) showMsg('success', 'Data restored from GitHub Gist!')
